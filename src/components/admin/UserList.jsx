@@ -1,6 +1,6 @@
 const UserList = ({ users }) => {
-  const getBadgeColor = (subscription) => {
-    switch (subscription) {
+  const getBadgeColor = (plan) => {
+    switch (plan) {
       case "Basic":
         return "bg-gray-200 text-gray-700";
       case "Pro":
@@ -10,6 +10,20 @@ const UserList = ({ users }) => {
       default:
         return "bg-gray-100 text-gray-500";
     }
+  };
+
+  const getUserPlan = (user) => {
+    if (user.subscriptionIds?.length > 0) {
+      return user.subscriptionIds[0]?.tier || "N/A"; // populated from backend
+    }
+    return user.requestedPlan || "N/A"; // requested plan if no subscription
+  };
+
+  const getUserKey = (user) => {
+    if (user.subscriptionIds?.length > 0) {
+      return user.subscriptionIds[0]?.key || "N/A";
+    }
+    return "N/A";
   };
 
   return (
@@ -29,66 +43,75 @@ const UserList = ({ users }) => {
                 <tr className="text-left text-gray-600 bg-gray-50">
                   <th className="p-3 sticky top-0 bg-gray-50 z-10">#</th>
                   <th className="p-3 sticky top-0 bg-gray-50 z-10">Email</th>
-                  <th className="p-3 sticky top-0 bg-gray-50 z-10">Subscription</th>
+                  <th className="p-3 sticky top-0 bg-gray-50 z-10">Plan</th>
                   <th className="p-3 sticky top-0 bg-gray-50 z-10 text-right">Key</th>
                 </tr>
               </thead>
               <tbody>
-                {users.map((user, idx) => (
-                  <tr
-                    key={idx}
-                    className="bg-white hover:shadow-md transition rounded-lg"
-                  >
-                    <td className="p-3 font-medium text-gray-700">{idx + 1}</td>
-                    <td className="p-3 max-w-[200px] lg:max-w-[250px] truncate text-gray-800">
-                      <span title={user.email}>{user.email}</span>
-                    </td>
-                    <td className="p-3">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${getBadgeColor(
-                          user.subscription
-                        )}`}
-                      >
-                        {user.subscription}
-                      </span>
-                    </td>
-                    <td className="p-3 text-right font-mono text-gray-500">{user.key}</td>
-                  </tr>
-                ))}
+                {users.map((user, idx) => {
+                  const plan = getUserPlan(user);
+                  const key = getUserKey(user);
+
+                  return (
+                    <tr
+                      key={idx}
+                      className="bg-white hover:shadow-md transition rounded-lg"
+                    >
+                      <td className="p-3 font-medium text-gray-700">{idx + 1}</td>
+                      <td className="p-3 max-w-[200px] lg:max-w-[250px] truncate text-gray-800">
+                        <span title={user.email}>{user.email}</span>
+                      </td>
+                      <td className="p-3">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${getBadgeColor(plan)}`}
+                        >
+                          {plan}
+                        </span>
+                      </td>
+                      <td className="p-3 text-right font-mono text-gray-500">
+                        {key}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
 
           {/* Mobile Cards */}
           <div className="md:hidden space-y-3">
-            {users.map((user, idx) => (
-              <div
-                key={idx}
-                className="bg-white shadow-md p-4 rounded-xl border border-gray-100"
-              >
-                <div className="flex flex-col gap-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold text-gray-800">
-                      #{idx + 1}
-                    </span>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${getBadgeColor(
-                        user.subscription
-                      )}`}
-                    >
-                      {user.subscription}
-                    </span>
+            {users.map((user, idx) => {
+              const plan = getUserPlan(user);
+              const key = getUserKey(user);
+
+              return (
+                <div
+                  key={idx}
+                  className="bg-white shadow-md p-4 rounded-xl border border-gray-100"
+                >
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-semibold text-gray-800">
+                        #{idx + 1}
+                      </span>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${getBadgeColor(plan)}`}
+                      >
+                        {plan}
+                      </span>
+                    </div>
+                    <p className="text-gray-700 text-sm break-all">{user.email}</p>
+                    <p className="text-xs text-gray-500 font-mono">Key: {key}</p>
                   </div>
-                  <p className="text-gray-700 text-sm break-all">{user.email}</p>
-                  <p className="text-xs text-gray-500 font-mono">Key: {user.key}</p>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </>
       )}
     </div>
   );
 };
+
 
 export default UserList;

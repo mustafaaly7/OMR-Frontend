@@ -1,22 +1,34 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
+import axios from "axios";
 
-const AddUserModal = ({ onClose, onAddUser }) => {
+const AddUserModal = ({ onClose, fetchUsers }) => {
   const [email, setEmail] = useState("");
   const [subscription, setSubscription] = useState("");
-  const [generatedKey, setGeneratedKey] = useState("");
+  const devUrl = import.meta.env.VITE_DEV_URL;
 
-  const generateKey = () =>
-    Math.random().toString(36).substring(2, 10).toUpperCase();
-
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!email || !subscription) {
       toast.error("Please fill all fields");
       return;
     }
-    onAddUser({ email, subscription, key: generatedKey || generateKey() });
-    toast.success("User added successfully!");
-    onClose();
+
+    try {
+      const response = await axios.post(`${devUrl}admin/add-user`, {
+        email,
+        subscriptionPlan: subscription,
+      });
+
+      if (!response.data.err) {
+        toast.success(response.data.message || "User added successfully!");
+        fetchUsers(); // Refresh user list after adding
+        onClose();
+      } else {
+        toast.error(response.data.message || "Failed to add user!");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Server error, please try again");
+    }
   };
 
   return (
@@ -44,20 +56,6 @@ const AddUserModal = ({ onClose, onAddUser }) => {
           <option value="Pro">Pro</option>
           <option value="Enterprise">Enterprise</option>
         </select>
-
-        <button
-          type="button"
-          onClick={() => setGeneratedKey(generateKey())}
-          className="w-full mb-3 px-3 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200 transition"
-        >
-          Generate Key
-        </button>
-
-        {generatedKey && (
-          <p className="text-center text-indigo-600 font-mono mb-3">
-            Key: {generatedKey}
-          </p>
-        )}
 
         <div className="flex justify-end gap-2">
           <button

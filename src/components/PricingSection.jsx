@@ -35,6 +35,8 @@ const PricingSection = ({ onSubscribe }) => {
     }),
   };
 
+  
+
   return (
     <section id="pricing" className="bg-gradient-to-br from-indigo-50 to-white py-24">
       <div className="container mx-auto px-6 text-center">

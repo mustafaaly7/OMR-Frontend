@@ -1,14 +1,42 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence,motion } from "framer-motion";
 import { X } from "lucide-react";
+import { useState } from "react";
+import { toast } from "react-toastify";
+import axios from "axios";
 
-const SubscriptionModal = ({ isOpen, onClose, onSuccess }) => {
+const SubscriptionModal = ({ isOpen, onClose, onSuccess, selectedPlan }) => {
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const devUrl = import.meta.env.VITE_DEV_URL;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSuccess();
-    onClose();
+
+    if (!email) {
+      toast.error("Please enter your email.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await axios.post(`${devUrl}user/subscribe`, {
+        email,
+        subscriptionPlan: selectedPlan,
+      });
+
+      if (!response.data.err) {
+        toast.success(response.data.message || "Subscription request sent!");
+        onSuccess?.();
+        setEmail("");
+        onClose();
+      } else {
+        toast.error(response.data.message || "Subscription failed.");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Server error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -20,7 +48,6 @@ const SubscriptionModal = ({ isOpen, onClose, onSuccess }) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
-          {/* Modal container */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -36,15 +63,13 @@ const SubscriptionModal = ({ isOpen, onClose, onSuccess }) => {
               <X size={20} />
             </button>
 
-            {/* Title */}
             <h2 className="text-2xl font-bold text-gray-800 text-center mb-2">
-              Subscribe Now
+              Subscribe to {selectedPlan}
             </h2>
             <p className="text-gray-500 text-center mb-6">
-              Enter your email to get started with your subscription.
+              Enter your email to request the {selectedPlan} plan.
             </p>
 
-            {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <input
                 type="email"
@@ -59,13 +84,13 @@ const SubscriptionModal = ({ isOpen, onClose, onSuccess }) => {
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 type="submit"
-                className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 rounded-lg shadow-md hover:shadow-lg transition"
+                disabled={loading}
+                className={`w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 rounded-lg shadow-md hover:shadow-lg transition ${loading ? "opacity-70 cursor-not-allowed" : ""}`}
               >
-                Confirm Subscription
+                {loading ? "Sending Request..." : `Confirm ${selectedPlan} Plan`}
               </motion.button>
             </form>
 
-            {/* Cancel Button */}
             <button
               onClick={onClose}
               className="block w-full text-center mt-4 text-sm text-gray-500 hover:text-gray-700"
